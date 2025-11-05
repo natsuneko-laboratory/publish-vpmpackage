@@ -4,7 +4,7 @@ import {
   errorMessage,
   withRetries,
 } from "@google-github-actions/actions-utils/dist";
-import { exportOutput } from "./utils";
+import { exportOutput, getManifest } from "./utils";
 import { readFileSync } from "node:fs";
 
 async function exchangeToken(): Promise<string> {
@@ -26,6 +26,49 @@ async function exchangeToken(): Promise<string> {
   exportOutput(data.token);
 
   return data.token;
+}
+
+async function waitForFinalize(url: string, pkg: string): Promise<void> {
+  const manifest = await getManifest(pkg);
+  const name = manifest.name;
+  const version = manifest.version;
+  const stat = `https://remuria.natsuneko.com/api/v1/package/status?name=${encodeURIComponent(
+    name
+  )}&version=${encodeURIComponent(version)}`;
+  let counter = 0;
+
+  return new Promise((resolve, reject) => {
+    setInterval(async () => {
+      try {
+        const res = await fetch(stat);
+        if (res.ok) {
+          const ret = await fetch(
+            "https://remuria.natsuneko.com/api/v1/package/finalize",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, url }),
+            }
+          );
+
+          if (ret.ok) {
+            return resolve();
+          }
+        }
+      } catch (e) {
+        // @ts-ignore
+        error(e);
+      }
+
+      counter++;
+
+      if (counter >= 12) {
+        return reject(
+          new Error(`package ${pkg} finalize timed out after 1 minute`)
+        );
+      }
+    }, 5000);
+  });
 }
 
 async function publishPackage(
@@ -61,6 +104,7 @@ async function publishPackage(
     return `package ${pkg} upload failed with status ${ret.status}`;
   }
 
+  await waitForFinalize(url, pkg);
   info(`package ${pkg} published to: ${url}`);
   return;
 }
