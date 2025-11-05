@@ -28,7 +28,11 @@ async function exchangeToken(): Promise<string> {
   return data.token;
 }
 
-async function waitForFinalize(url: string, pkg: string): Promise<void> {
+async function waitForFinalize(
+  token: string,
+  url: string,
+  pkg: string
+): Promise<void> {
   const manifest = await getManifest(pkg);
   const name = manifest.name;
   const version = manifest.version;
@@ -40,13 +44,20 @@ async function waitForFinalize(url: string, pkg: string): Promise<void> {
   return new Promise((resolve, reject) => {
     setInterval(async () => {
       try {
-        const res = await fetch(stat);
+        const res = await fetch(stat, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (res.ok) {
           const ret = await fetch(
             "https://remuria.natsuneko.com/api/v1/package/finalize",
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
               body: JSON.stringify({ name, url }),
             }
           );
@@ -104,7 +115,7 @@ async function publishPackage(
     return `package ${pkg} upload failed with status ${ret.status}`;
   }
 
-  await waitForFinalize(url, pkg);
+  await waitForFinalize(token, url, pkg);
   info(`package ${pkg} published to: ${url}`);
   return;
 }
