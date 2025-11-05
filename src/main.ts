@@ -1,0 +1,110 @@
+import { error, getIDToken, info, setFailed } from "@actions/core";
+import { getAudience, getPackagesInput, getRetries } from "./input";
+import {
+  errorMessage,
+  withRetries,
+} from "@google-github-actions/actions-utils/dist";
+import { exportOutput } from "./utils";
+import { readFileSync } from "node:fs";
+
+async function exchangeToken(): Promise<string> {
+  const audience = getAudience();
+  const token = getIDToken(audience);
+
+  const exchangeRes = await fetch(
+    "https://api.natsuneko.com/v1/tokens/exchange",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_token: token }),
+    }
+  );
+
+  if (!exchangeRes.ok) {
+    throw new Error(`token exchange failed with status ${exchangeRes.status}`);
+  }
+
+  // output token
+  const data = await exchangeRes.json();
+  exportOutput(data.token);
+
+  return data.token;
+}
+
+async function publishPackage(
+  pkg: string,
+  token: string
+): Promise<string | undefined> {
+  const res = await fetch(
+    "https://remuria.natsuneko.com/api/v1/package/publish",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!res.ok) {
+    return `package ${pkg} publish failed with status ${res.status}`;
+  }
+
+  const data = await res.json();
+  const { url, signedUrl } = data;
+  const file = readFileSync(pkg);
+
+  const ret = await fetch(signedUrl, {
+    method: "PUT",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
+  });
+
+  if (!ret.ok) {
+    return `package ${pkg} upload failed with status ${ret.status}`;
+  }
+
+  info(`package ${pkg} published to: ${url}`);
+  return;
+}
+
+async function main() {
+  try {
+    const token = await exchangeToken();
+    const packages = getPackagesInput();
+
+    const errors: string[] = [];
+    // publish packages
+    for (const pkg of packages) {
+      const ret = await publishPackage(pkg, token);
+      if (ret) {
+        errors.push(ret);
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(errors.join("\n"));
+    }
+  } catch (err) {
+    if (err instanceof Error) setFailed(err.message);
+  }
+}
+
+async function run() {
+  const retries = Number(getRetries());
+
+  try {
+    await withRetries(main, {
+      retries,
+      backoff: 300,
+    });
+  } catch (e) {
+    const msg = errorMessage(e);
+
+    // @ts-ignore
+    error(e);
+    setFailed(`@natsuneko-laboratory/publish-vpmpackage failed with ${msg}`);
+  }
+}
+
+run();

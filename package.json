@@ -1,0 +1,24 @@
+{
+  "name": "@natsuneko-laboratory/publish-vpmpackage",
+  "version": "0.1.0",
+  "description": "GitHub Actions for publishing a VPMPackage to Remuria, via OIDC authentication.",
+  "main": "dist/index.js",
+  "repository": "https://github.com/natsuneko-laboratory/publish-vpmpackage.git",
+  "author": "Natsune Mochizuki <me@natsuneko.cat>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc",
+    "package": "ncc build -m src/main.ts -o dist --source-map --license LICENSE"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@google-github-actions/actions-utils": "^0.8.10"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.7",
+    "@types/node": "^24.9.1",
+    "@vercel/ncc": "^0.38.4",
+    "typescript": "^5.9.3"
+  }
+}

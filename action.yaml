@@ -1,0 +1,9 @@
+name: "Publish a VPMPackage to Remuria"
+description: "Publish a VPMPackage to Remuria, via OIDC"
+inputs:
+  packages:
+    required: true
+    description: "array of packages (.zip) for publishing"
+runs:
+  using: "node24"
+  main: "dist/index.js"
