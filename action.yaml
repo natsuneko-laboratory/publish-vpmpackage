@@ -5,5 +5,5 @@ inputs:
     required: true
     description: "array of packages (.zip) for publishing"
 runs:
-  using: "node24"
+  using: "node20"
   main: "dist/index.js"
