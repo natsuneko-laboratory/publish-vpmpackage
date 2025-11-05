@@ -11,14 +11,11 @@ async function exchangeToken(): Promise<string> {
   const audience = getAudience();
   const token = getIDToken(audience);
 
-  const exchangeRes = await fetch(
-    "https://api.natsuneko.com/v1/token/exchange",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_token: token }),
-    }
-  );
+  const exchangeRes = await fetch("https://api.natsuneko.com/token/exchange", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id_token: token }),
+  });
 
   if (!exchangeRes.ok) {
     throw new Error(`token exchange failed with status ${exchangeRes.status}`);
