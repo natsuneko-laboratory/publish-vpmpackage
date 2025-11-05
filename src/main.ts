@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 
 async function exchangeToken(): Promise<string> {
   const audience = getAudience();
-  const token = getIDToken(audience);
+  const token = await getIDToken(audience);
 
   const exchangeRes = await fetch("https://api.natsuneko.com/token/exchange", {
     method: "POST",
@@ -155,4 +155,10 @@ async function run() {
   }
 }
 
-run();
+run()
+  .then()
+  .catch((e) => {
+    const msg = errorMessage(e);
+    error(`Unexpected error: ${msg}`);
+    setFailed(`@natsuneko-laboratory/publish-vpmpackage failed with ${msg}`);
+  });

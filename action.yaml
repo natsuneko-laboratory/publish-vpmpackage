@@ -1,6 +1,12 @@
 name: "Publish a VPMPackage to Remuria"
 description: "Publish a VPMPackage to Remuria, via OIDC"
 inputs:
+  audience:
+    required: false
+    description: audience of id token
+  retries:
+    required: false
+    description: retry count
   packages:
     required: true
     description: "array of packages (.zip) for publishing"
