@@ -151,7 +151,12 @@ async function run() {
   debug(`Retries set to ${retries}`);
 
   try {
-    await main();
+    const fn = withRetries(main, {
+      retries,
+      backoff: 300,
+    });
+
+    await fn();
   } catch (e) {
     const msg = errorMessage(e);
 
