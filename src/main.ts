@@ -12,7 +12,7 @@ async function exchangeToken(): Promise<string> {
   const token = getIDToken(audience);
 
   const exchangeRes = await fetch(
-    "https://api.natsuneko.com/v1/tokens/exchange",
+    "https://api.natsuneko.com/v1/token/exchange",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
