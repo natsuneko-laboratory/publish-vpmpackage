@@ -121,24 +121,20 @@ async function publishPackage(
 }
 
 async function main() {
-  try {
-    const token = await exchangeToken();
-    const packages = getPackagesInput();
+  const token = await exchangeToken();
+  const packages = getPackagesInput();
 
-    const errors: string[] = [];
-    // publish packages
-    for (const pkg of packages) {
-      const ret = await publishPackage(pkg, token);
-      if (ret) {
-        errors.push(ret);
-      }
+  const errors: string[] = [];
+  // publish packages
+  for (const pkg of packages) {
+    const ret = await publishPackage(pkg, token);
+    if (ret) {
+      errors.push(ret);
     }
+  }
 
-    if (errors.length > 0) {
-      throw new Error(errors.join("\n"));
-    }
-  } catch (err) {
-    if (err instanceof Error) setFailed(err.message);
+  if (errors.length > 0) {
+    throw new Error(errors.join("\n"));
   }
 }
 
