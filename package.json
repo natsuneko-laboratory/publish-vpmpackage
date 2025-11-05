@@ -1,6 +1,6 @@
 {
   "name": "@natsuneko-laboratory/publish-vpmpackage",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "GitHub Actions for publishing a VPMPackage to Remuria, via OIDC authentication.",
   "main": "dist/index.js",
   "repository": "https://github.com/natsuneko-laboratory/publish-vpmpackage.git",

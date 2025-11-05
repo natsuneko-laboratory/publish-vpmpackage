@@ -45,7 +45,7 @@ async function waitForFinalize(
 
   debug(`waiting for package ${pkg} to be finalized`);
   return new Promise((resolve, reject) => {
-    setInterval(async () => {
+    const interval = setInterval(async () => {
       try {
         debug(`checking status for package ${pkg}... (attempt ${counter + 1})`);
 
@@ -68,6 +68,7 @@ async function waitForFinalize(
           );
 
           if (ret.ok) {
+            clearInterval(interval);
             return resolve();
           }
         }
@@ -79,6 +80,7 @@ async function waitForFinalize(
       counter++;
 
       if (counter >= 12) {
+        clearInterval(interval);
         return reject(
           new Error(`package ${pkg} finalize timed out after 1 minute`)
         );
