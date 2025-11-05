@@ -1,4 +1,4 @@
-import { error, getIDToken, info, setFailed } from "@actions/core";
+import { debug, error, getIDToken, info, setFailed } from "@actions/core";
 import { getAudience, getPackagesInput, getRetries } from "./input";
 import {
   errorMessage,
@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 
 async function exchangeToken(): Promise<string> {
   const audience = getAudience();
+  debug(`requesting ID token with audience: ${audience}`);
   const token = await getIDToken(audience);
 
   const exchangeRes = await fetch("https://api.natsuneko.com/token/exchange", {
@@ -25,6 +26,7 @@ async function exchangeToken(): Promise<string> {
   const data = await exchangeRes.json();
   exportOutput(data.token);
 
+  debug("successfully exchanged OIDC token to Remuria ID token");
   return data.token;
 }
 
@@ -41,9 +43,12 @@ async function waitForFinalize(
   )}&version=${encodeURIComponent(version)}`;
   let counter = 0;
 
+  debug(`waiting for package ${pkg} to be finalized`);
   return new Promise((resolve, reject) => {
     setInterval(async () => {
       try {
+        debug(`checking status for package ${pkg}... (attempt ${counter + 1})`);
+
         const res = await fetch(stat, {
           method: "GET",
           headers: { Authorization: `Bearer ${token}` },
@@ -124,9 +129,12 @@ async function main() {
   const token = await exchangeToken();
   const packages = getPackagesInput();
 
+  debug(`collected packages: ${packages.join(", ")}`);
+
   const errors: string[] = [];
   // publish packages
   for (const pkg of packages) {
+    debug(`publishing package: ${pkg}`);
     const ret = await publishPackage(pkg, token);
     if (ret) {
       errors.push(ret);
@@ -140,12 +148,10 @@ async function main() {
 
 async function run() {
   const retries = Number(getRetries());
+  debug(`Retries set to ${retries}`);
 
   try {
-    await withRetries(main, {
-      retries,
-      backoff: 300,
-    });
+    await main();
   } catch (e) {
     const msg = errorMessage(e);
 
