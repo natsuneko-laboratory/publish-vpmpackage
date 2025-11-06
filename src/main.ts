@@ -43,11 +43,11 @@ async function waitForFinalize(
   )}&version=${encodeURIComponent(version)}`;
   let counter = 0;
 
-  debug(`waiting for package ${pkg} to be finalized`);
+  info(`waiting for package ${pkg} to be finalized`);
   return new Promise((resolve, reject) => {
     const interval = setInterval(async () => {
       try {
-        debug(`checking status for package ${pkg}... (attempt ${counter + 1})`);
+        info(`checking status for package ${pkg}... (attempt ${counter + 1})`);
 
         const res = await fetch(stat, {
           method: "GET",
@@ -69,6 +69,7 @@ async function waitForFinalize(
 
           if (ret.ok) {
             clearInterval(interval);
+            info(`package ${pkg} finalized successfully`);
             return resolve();
           }
         }
@@ -136,9 +137,10 @@ async function main() {
   const errors: string[] = [];
   // publish packages
   for (const pkg of packages) {
-    debug(`publishing package: ${pkg}`);
+    info(`publishing package: ${pkg}`);
     const ret = await publishPackage(pkg, token);
     if (ret) {
+      info(`package ${pkg} failed to publish: ${ret}`);
       errors.push(ret);
     }
   }
